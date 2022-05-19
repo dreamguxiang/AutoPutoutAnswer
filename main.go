@@ -10,11 +10,13 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"time"
 )
 
 func main() {
-	putoutTitleList()
-	//ReadTitle("timu.txt")
+	//putoutTitleList()
+	ReadTitle("timu.txt")
+	time.Sleep(114514 * 1919 * 810)
 }
 
 func ReadTitle(filepath string) {
@@ -32,6 +34,10 @@ func ReadTitle(filepath string) {
 	log.Println("> Reading timu.txt")
 	scanner := bufio.NewScanner(file)
 	num := 0
+	readFile, err := ioutil.ReadFile(filepath)
+	if err != nil {
+		return
+	}
 	for scanner.Scan() {
 		line := scanner.Text()
 		if strings.Contains(line, "*") {
@@ -40,13 +46,40 @@ func ReadTitle(filepath string) {
 			line = reg.ReplaceAllString(line, "")
 			if _, isOk := m[line]; isOk {
 				num += 1
-				fmt.Println(strconv.Itoa(num) + "." + line + "\n答案：" + m[line] + "\n")
+				fmt.Println(strconv.Itoa(num) + "." + line + "\n答案：" + getOptions(string(readFile), m[line]) + "\n")
 			} else {
 				num += 1
 				fmt.Println(strconv.Itoa(num) + "." + line + "\n答案：不存在\n")
 			}
 		}
 	}
+}
+
+func getOptions(oristr string, str string) string {
+	out := regexp.MustCompile("([*])[^*]+(?:;[^*][^*]*)*").FindAllString(oristr, -1)
+	for _, v := range out {
+		scanner := bufio.NewScanner(strings.NewReader(v))
+		for scanner.Scan() {
+			line := scanner.Text()
+			if strings.Contains(line, str) {
+				if strings.Contains(line, "对") {
+					return "对"
+				}
+				if strings.Contains(line, "错") {
+					return "错"
+				}
+				if !isABCD(line) {
+					continue
+				}
+				return line
+			}
+		}
+	}
+	return "不存在"
+}
+
+func isABCD(str string) bool {
+	return strings.Contains(str, "A.") || strings.Contains(str, "B.") || strings.Contains(str, "C.") || strings.Contains(str, "D.")
 }
 
 func createTitleList(filepath string) map[string]string {
